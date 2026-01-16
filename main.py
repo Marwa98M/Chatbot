@@ -17,7 +17,7 @@ async def handle_request(request: Request):
     #output_context = ['queryResult']['outputContexts']
 
     if intent == "track.order - context: ongoing-tracking":
-        track_order(parameters)
+        return track_order(parameters)
 
 def track_order(parameters: dict):
     order_id = parameters['order_id']
