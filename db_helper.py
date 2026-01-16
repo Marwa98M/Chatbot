@@ -94,23 +94,24 @@ cnx = mysql.connector.connect(
 
 # Function to fetch the order status from the order_tracking table
 def get_order_status(order_id):
-    cursor = cnx.cursor()
+    try:
+        cursor = cnx.cursor()
+        # Executing the SQL query to fetch the order status
+        #query = f"SELECT status FROM order_tracking WHERE order_id = {order_id}"
+        query = "SELECT status FROM order_tracking WHERE order_id = %s"
+        cursor.execute(query, (order_id,))
 
-    # Executing the SQL query to fetch the order status
-    #query = f"SELECT status FROM order_tracking WHERE order_id = {order_id}"
-    query = "SELECT status FROM order_tracking WHERE order_id = %s"
-    cursor.execute(query, (order_id,))
+        # Fetching the result
+        result = cursor.fetchone()
 
-    # Fetching the result
-    result = cursor.fetchone()
-
-    # Closing the cursor
-    cursor.close()
-
-    # Returning the order status
-    if result:
-        return result[0]
-    else:
+        # Closing the cursor
+        cursor.close()
+        return result[0] if result else None
+    except mysql.connector.Error as err:
+        print(f"MySQL Error: {err}")
+        return None
+    except Exception as e:
+        print(f"Error: {e}")
         return None
 
 #
