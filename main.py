@@ -17,9 +17,10 @@ async def handle_request(request: Request):
     #output_context = ['queryResult']['outputContexts']
 
     if intent == "track.order - context: ongoing-tracking":
-       return JSONResponse(content={
-           "fulfillmentText": "Recieved in the backend"
-       })
+        fulfillment_text = f"Received order {intent} in the backend"
+        return JSONResponse(content={
+            "fulfillmentText": fulfillment_text
+        })
     return JSONResponse(content={
         "fulfillmentText": "Not Recieved in the backend"
     })
