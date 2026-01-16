@@ -20,7 +20,7 @@ async def handle_request(request: Request):
         return track_order(parameters)
 
 def track_order(parameters: dict):
-    order_id = parameters['order_id']
+    order_id = int(parameters['order_id'])
     order_status = db_helper.get_order_status(order_id)
 
     if order_status:
