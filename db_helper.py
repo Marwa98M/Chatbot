@@ -97,8 +97,9 @@ def get_order_status(order_id):
     cursor = cnx.cursor()
 
     # Executing the SQL query to fetch the order status
-    query = f"SELECT status FROM order_tracking WHERE order_id = {order_id}"
-    cursor.execute(query)
+    #query = f"SELECT status FROM order_tracking WHERE order_id = {order_id}"
+    query = "SELECT status FROM order_tracking WHERE order_id = %s"
+    cursor.execute(query, (order_id,))
 
     # Fetching the result
     result = cursor.fetchone()
