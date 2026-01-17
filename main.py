@@ -15,10 +15,9 @@ async def handle_request(request: Request):
     parameters = pyload['queryResult']['parameters']
     #output_context = ['queryResult']['outputContexts']
 
-    if intent == "track.order - context: ongoing-tracking":
-        return track_order(parameters)
+
     intent_handler_dict = {
-        "order.add - context: ongoing-order" : add_to_order,
+        "order.add -context: ongoing-order" : add_to_order,
         "track.order - context: ongoing-order" : track_order
     }
     return intent_handler_dict[intent](parameters)
