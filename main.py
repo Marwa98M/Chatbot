@@ -4,7 +4,6 @@ from fastapi.responses import JSONResponse
 import db_helper
 app = FastAPI()
 
-
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -18,6 +17,25 @@ async def handle_request(request: Request):
 
     if intent == "track.order - context: ongoing-tracking":
         return track_order(parameters)
+    intent_handler_dict = {
+        "order.add - context: ongoing-order" : add_to_order,
+        "track.order - context: ongoing-order" : track_order
+    }
+    return intent_handler_dict[intent](parameters)
+
+
+def add_to_order(parameters: dict):
+    food_items = parameters["food-item"]
+    quantities = parameters["number"]
+    if len(food_items) != len(quantities):
+        fulfillment_text = f"No order found with order id: {food_items}"
+    else:
+        fulfillment_text = f"The order: {food_items} has: {quantities}"
+
+    return JSONResponse(content={
+        "fulfillmentText": fulfillment_text
+    })
+
 
 def track_order(parameters: dict):
     order_id = int(parameters['order_id'])
@@ -27,7 +45,6 @@ def track_order(parameters: dict):
         fulfillment_text = f"The order status for order id: {order_id} is: {order_status}"
     else:
         fulfillment_text = f"No order found with order id: {order_id}"
-
 
     return JSONResponse(content={
         "fulfillmentText": fulfillment_text
