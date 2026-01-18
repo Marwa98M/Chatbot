@@ -13,10 +13,10 @@ async def root():
 
 @app.post("/")
 async def handle_request(request: Request):
-    pyload = await request.json()
-    intent = pyload['queryResult']['intent']['displayName']
-    parameters = pyload['queryResult']['parameters']
-    output_context = pyload['queryResult']['outputContexts']
+    payload = await request.json()
+    intent = payload['queryResult']['intent']['displayName']
+    parameters = payload['queryResult']['parameters']
+    output_context = payload['queryResult']['outputContexts']
     session_id = generic_helper.extract_session_id(output_context[0]['name'])
 
     intent_handler_dict = {
@@ -68,8 +68,7 @@ def add_to_order(parameters: dict, session_id: str):
         # step 1: get current food items of the session id
         # step 2: add the new food items to the inprogress_orders dict
         if session_id in inprogress_orders:
-            current_food_dict = inprogress_orders[session_id]
-            inprogress_orders[session_id] = current_food_dict.update(new_food_dict)
+            inprogress_orders[session_id].update(new_food_dict)
         else:
             # if a user wants to add more food items to an empty order
             inprogress_orders[session_id] = new_food_dict
@@ -84,6 +83,10 @@ def add_to_order(parameters: dict, session_id: str):
 
 
 def track_order(parameters: dict, session_id: str):
+    if 'order_id' not in parameters:
+        return JSONResponse(content={
+            "fulfillmentText": "Please provide an order ID."
+        })
     order_id = int(parameters['order_id'])
     order_status = db_helper.get_order_status(order_id)
 
