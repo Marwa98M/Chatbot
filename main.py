@@ -16,7 +16,7 @@ async def handle_request(request: Request):
     pyload = await request.json()
     intent = pyload['queryResult']['intent']['displayName']
     parameters = pyload['queryResult']['parameters']
-    output_context = ['queryResult']['outputContexts']
+    output_context = pyload['queryResult']['outputContexts']
     session_id = generic_helper.extract_session_id(output_context[0]['name'])
 
     intent_handler_dict = {
