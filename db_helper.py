@@ -66,41 +66,42 @@ cnx = mysql.connector.connect(
 #
 #     # Closing the cursor
 #     cursor.close()
-#
-# def get_total_order_price(order_id):
-#     cursor = cnx.cursor()
-#
-#     # Executing the SQL query to get the total order price
-#     query = f"SELECT get_total_order_price({order_id})"
-#     cursor.execute(query)
-#
-#     # Fetching the result
-#     result = cursor.fetchone()[0]
-#
-#     # Closing the cursor
-#     cursor.close()
-#
-#     return result
-#
-# # Function to get the next available order_id
-# def get_next_order_id():
-#     cursor = cnx.cursor()
-#
-#     # Executing the SQL query to get the next available order_id
-#     query = "SELECT MAX(order_id) FROM orders"
-#     cursor.execute(query)
-#
-#     # Fetching the result
-#     result = cursor.fetchone()[0]
-#
-#     # Closing the cursor
-#     cursor.close()
-#
-#     # Returning the next available order_id
-#     if result is None:
-#         return 1
-#     else:
-#         return result + 1
+
+def get_total_order_price(order_id):
+    cursor = cnx.cursor()
+
+    # Executing the SQL query to get the total order price
+    query = f"SELECT get_total_order_price({order_id})"
+    cursor.execute(query)
+
+    # Fetching the result
+    result = cursor.fetchone()[0]
+
+    # Closing the cursor
+    cursor.close()
+
+    return result
+
+
+# Function to get the next available order_id
+def get_next_order_id():
+    cursor = cnx.cursor()
+
+    # Executing the SQL query to get the next available order_id
+    query = "SELECT MAX(order_id) FROM orders"
+    cursor.execute(query)
+
+    # Fetching the result
+    result = cursor.fetchone()[0]
+
+    # Closing the cursor
+    cursor.close()
+
+    # Returning the next available order_id
+    if result is None:
+        return 1
+    else:
+        return result + 1
 
 def add_items(order_idd, food_name, quantities):
     try:
