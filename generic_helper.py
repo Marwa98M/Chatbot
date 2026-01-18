@@ -16,7 +16,12 @@ def get_str_from_food_dict(food_dict):
         if i < len(food_dict):
             fulfillment_text += ', and '
         i = i+1
+    fulfillment_text = f". Do you need anything else? "
     return fulfillment_text
+
+
 if __name__ == "__main__":
     print(extract_session_id("projects/mira-chatbot-for-food-del-iwup/agent/sessions/362e60d4-0f2d-37cc-8fb9-9535fb8169d9/contexts/ongoing-order")
 )
+
+

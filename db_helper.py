@@ -102,6 +102,36 @@ cnx = mysql.connector.connect(
 #     else:
 #         return result + 1
 
+def add_items(order_idd, food_name, quantities):
+    try:
+        cursor = cnx.cursor()
+        # Executing the SQL query to fetch the order status
+        #query = f"SELECT status FROM order_tracking WHERE order_id = {order_id}"
+        query = "SELECT item_id FROM food_items WHERE name = food_name"
+        cursor.execute(query, (food_name,))
+
+        # Fetching the result
+        result = cursor.fetchone()
+        # Closing the cursor
+        cursor.close()
+
+        if result:
+            # check if item_id exist in orders
+            # if yes
+            # add to the item_id, and order_id the quantity in orders.
+            item_id = "INSERT INTO `food_items` VALUES (quantities) WHERE order_id = order_idd AND item_id = query";
+            # else
+            item_id = "INSERT INTO `food_items` VALUES (quantities, query) WHERE order_id = order_idd";
+
+        return result[0] if result else None
+    except mysql.connector.Error as err:
+        print(f"MySQL Error: {err}")
+        return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+
 # Function to fetch the order status from the order_tracking table
 def get_order_status(order_id):
     try:
@@ -123,6 +153,8 @@ def get_order_status(order_id):
     except Exception as e:
         print(f"Error: {e}")
         return None
+
+
 
 #
 # if __name__ == "__main__":
