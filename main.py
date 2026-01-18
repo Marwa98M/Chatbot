@@ -22,62 +22,58 @@ async def handle_request(request: Request):
     intent_handler_dict = {
         "order.add -context: ongoing-order": add_to_order,
         "track.order - context: ongoing-order": track_order,
-        # "order.complete - context: ongoing-order": complete_order,
+        "order.complete - context: ongoing-order": complete_order,
         # "order.remove - context: ongoing-order": remove_order
     }
     return intent_handler_dict[intent](parameters, session_id)
 
-# def completed_order(parameters: dict, session_id: str):
-#     food_items = parameters["food-item"]
-#     quantities = parameters["number"]
-#     if session_id not in inprogress_orders:
-#         fulfillment_text = "I'm having a trouble finding your order. Sorry! Can you place new order"
-#     else:
-#         order = inprogress_orders[session_id]
-#         db_helper.save_to_db(order)
-#
-# def complete_order(parameters: dict, session_id: str):
-#     if session_id not in inprogress_orders:
-#         fulfillment_text = "I'm having a trouble finding your order. Sorry! Can you place a new order please?"
-#     else:
-#         order = inprogress_orders[session_id]
-#         order_id = save_to_db(order)
-#         if order_id == -1:
-#             fulfillment_text = "Sorry, I couldn't process your order due to a backend error. " \
-#                                "Please place a new order again"
-#         else:
-#             order_total = db_helper.get_total_order_price(order_id)
-#
-#             fulfillment_text = f"Awesome. We have placed your order. " \
-#                            f"Here is your order id # {order_id}. " \
-#                            f"Your order total is {order_total} which you can pay at the time of delivery!"
-#
-#         del inprogress_orders[session_id]
-#
-#     return JSONResponse(content={
-#         "fulfillmentText": fulfillment_text
-#     })
+def completed_order(parameters: dict, session_id: str):
+    food_items = parameters["food-item"]
+    quantities = parameters["number"]
+    if session_id not in inprogress_orders:
+        fulfillment_text = "I'm having a trouble finding your order. Sorry! Can you place new order"
+    else:
+        # after a user says "that's it" save the order into the database.
+        order = inprogress_orders[session_id]
+        db_helper.save_to_db(order)
+
+def complete_order(parameters: dict, session_id: str):
+    if session_id not in inprogress_orders:
+        fulfillment_text = "I'm having a trouble finding your order. Sorry! Can you place a new order please?"
+    else:
+        order = inprogress_orders[session_id]
+        order_id = save_to_db(order)
+        if order_id == -1:
+            fulfillment_text = "Sorry, I couldn't process your order due to a backend error. " \
+                               "Please place a new order again"
+        else:
+            order_total = db_helper.get_total_order_price(order_id)
+            fulfillment_text = f"Awesome. We have placed your order. " \
+                           f"Here is your order id # {order_id}. " \
+                           f"Your order total is {order_total} which you can pay at the time of delivery!"
+        del inprogress_orders[session_id]
+    return JSONResponse(content={
+        "fulfillmentText": fulfillment_text
+    })
 
 
-#
-# def save_to_db(order: dict):
-#     next_order_id = db_helper.get_next_order_id()
-#
-#     # Insert individual items along with quantity in orders table
-#     for food_item, quantity in order.items():
-#         rcode = db_helper.insert_order_item(
-#             food_item,
-#             quantity,
-#             next_order_id
-#         )
-#
-#         if rcode == -1:
-#             return -1
-#
-#     # Now insert order tracking status
-#     db_helper.insert_order_tracking(next_order_id, "in progress")
-#
-#     return next_order_id
+def save_to_db(order: dict):
+    # to add food-items
+    # step 1: if list is empty new order = 1
+    # step 2: if list is not empty new order = retrieve the max order id and add one
+    next_order_id = db_helper.get_next_order_id()
+
+    # Insert individual items along with quantity and total price in orders table
+    for food_item, quantity in order.items(): # e.g. ['milk': 1, 'banana':2]
+        rcode = db_helper.insert_order_item(food_item,quantity,next_order_id)
+
+        if rcode == -1:
+            return -1
+
+    # Now insert order tracking status
+    db_helper.insert_order_tracking(next_order_id, "in progress")
+
+    return next_order_id
 
 
 def add_to_order(parameters: dict, session_id: str):
