@@ -34,7 +34,6 @@ def new_order(parameters: dict, session_id: str):
     inprogress_orders.pop(session_id, None)
 
 
-
 def remove_from_order(parameters: dict, session_id: str):
     if session_id not in inprogress_orders:
         return JSONResponse(content={

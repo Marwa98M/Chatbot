@@ -31,6 +31,9 @@ def insert_order_item(food_item, quantity, order_id):
     try:
         # Initializing the cursor, Calling the stored procedure, Committing the changes, Closing the cursor
         cursor = cnx.cursor()
+        cursor.execute("SHOW PROCEDURE STATUS WHERE Db='pandeyji_eatery';")
+        for proc in cursor.fetchall():
+            print(proc)
         cursor.callproc('insert_order_item', (food_item, quantity, order_id))
         cnx.commit()
         cursor.close()
