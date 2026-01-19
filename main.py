@@ -72,6 +72,7 @@ def remove_from_order(parameters: dict, session_id: str):
 
 
 def complete_order(parameters: dict, session_id: str):
+    print(inprogress_orders)
     if session_id not in inprogress_orders:
         fulfillment_text = f"{session_id} I'm having a trouble finding your order. Sorry! Can you place a new order please?"
     else:
