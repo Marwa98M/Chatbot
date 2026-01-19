@@ -66,7 +66,9 @@ def get_next_order_id():
     if result is None: # if it is empty
         return 1
     else:
+        print(result)
         return result + 1
+
 
 
 # Function for executing the SQL query to fetch the order status from the order_tracking table

@@ -23,55 +23,63 @@ async def handle_request(request: Request):
         "order.add -context: ongoing-order": add_to_order,
         "track.order - context: ongoing-order": track_order,
         "order.complete - context: ongoing-order": complete_order,
-        # "order.remove - context: ongoing-order": remove_order
+        "order.remove - context: ongoing-order": remove_from_order,
+        "new.order": new_order
     }
+
     return intent_handler_dict[intent](parameters, session_id)
 
-#
-# def remove_from_order(parameters: dict, session_id: str):
-#     if session_id not in inprogress_orders:
-#         return JSONResponse(content={
-#             "fulfillmentText": "I'm having a trouble finding your order. Sorry! Can you place a new order please?"
-#         })
-#
-#     food_items = parameters["food-item"]
-#     current_order = inprogress_orders[session_id]
-#
-#     removed_items = []
-#     no_such_items = []
-#
-#     for item in food_items:
-#         if item not in current_order:
-#             no_such_items.append(item)
-#         else:
-#             removed_items.append(item)
-#             del current_order[item]
-#
-#     if len(removed_items) > 0:
-#         fulfillment_text = f'Removed {",".join(removed_items)} from your order!'
-#
-#     if len(no_such_items) > 0:
-#         fulfillment_text = f' Your current order does not have {",".join(no_such_items)}'
-#
-#     if len(current_order.keys()) == 0:
-#         fulfillment_text += " Your order is empty!"
-#     else:
-#         order_str = generic_helper.get_str_from_food_dict(current_order)
-#         fulfillment_text += f" Here is what is left in your order: {order_str}"
-#
-#     return JSONResponse(content={
-#         "fulfillmentText": fulfillment_text
-#     })
+
+def new_order(parameters: dict, session_id: str):
+    inprogress_orders.pop(session_id, None)
+
+
+
+def remove_from_order(parameters: dict, session_id: str):
+    if session_id not in inprogress_orders:
+        return JSONResponse(content={
+            "fulfillmentText": "I'm having a trouble finding your order. Sorry! Can you place a new order please?"
+        })
+
+    food_items = parameters["food-item"]
+    current_order = inprogress_orders[session_id]
+
+    removed_items = []
+    no_such_items = []
+
+    for item in food_items:
+        if item not in current_order:
+            no_such_items.append(item)
+        else:
+            removed_items.append(item)
+            del current_order[item]
+
+    # Check if items are removed and display them
+    if len(removed_items) > 0:
+        fulfillment_text = f'Removed {",".join(removed_items)} from your order!'
+    # Check if items are not ordered by the user and display the current order items.
+    if len(no_such_items) > 0:
+        fulfillment_text = f' Your current order does not have {",".join(no_such_items)}'
+    # Display order items weather its empty or have some items.
+    if len(current_order.keys()) == 0:
+        fulfillment_text += " Your order is empty!"
+    else:
+        order_str = generic_helper.get_str_from_food_dict(current_order)
+        fulfillment_text += f" Here is what is left in your order: {order_str}"
+
+    return JSONResponse(content={
+        "fulfillmentText": fulfillment_text
+    })
 
 
 def complete_order(parameters: dict, session_id: str):
     if session_id not in inprogress_orders:
-        fulfillment_text = "I'm having a trouble finding your order. Sorry! Can you place a new order please?"
+        fulfillment_text = f"{session_id} I'm having a trouble finding your order. Sorry! Can you place a new order please?"
     else:
         order = inprogress_orders[session_id]
         order_id = save_to_db(order)
         if order_id == -1:
-            fulfillment_text = "Sorry, I couldn't process your order due to a backend error. " \
+            fulfillment_text = f"{order_id}Sorry, I couldn't process your order due to a backend error. " \
                                "Please place a new order again"
         else:
             order_total = db_helper.get_total_order_price(order_id)
@@ -107,7 +115,6 @@ def add_to_order(parameters: dict, session_id: str):
 
     food_items = parameters["food-item"]
     quantities = parameters["number"]
-    fulfillment_text = f"you are in order intent food_items is {food_items} and your quantities is {quantities}"
     # user typed sth like i want 2 pizza and milk
     # it should be i want 2 pizza and one milk - one quantity for each
     if len(food_items) != len(quantities):
@@ -125,9 +132,8 @@ def add_to_order(parameters: dict, session_id: str):
         else:
             # if a user wants to add more food items to an empty order
             inprogress_orders[session_id] = new_food_dict
-        fulfillment_text += f"{inprogress_orders}"
         order_str = generic_helper.get_str_from_food_dict(inprogress_orders[session_id])
-        fulfillment_text += f"{order_str}"
+        fulfillment_text = f"{order_str}"
 
     return JSONResponse(content={
         "fulfillmentText": fulfillment_text
