@@ -108,7 +108,7 @@ def get_order_status(order_id):
         return None
 
 
-if __name__ == "__main__": # all methods are tested
+# if __name__ == "__main__": # all methods are tested
 # insert_order_tracking(99, "in progress") # works well
 # print(get_next_order_id()) # Works well 100
 # insert_order_item('Samosa', 3, 99) # works well; Order item inserted successfully!
