@@ -27,7 +27,7 @@ def insert_order_item(food_item, quantity, order_id):
 
     except mysql.connector.Error as err:
         print(f"Error inserting order item: {err}")
-        cnx.rollback() # Rollback changes if necessary
+        cnx.rollback()  # Rollback changes if necessary
         return -1
 
     except Exception as e:
@@ -43,7 +43,6 @@ def insert_order_tracking(order_id, status):
     cursor.execute(insert_query, (order_id, status))
     cnx.commit()
     cursor.close()
-
 
 
 # Function to execute the SQL query to get the total order price
