@@ -13,6 +13,7 @@ def get_db():
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         database=os.getenv("DB_NAME"),
+        ssl_ca="./certs/ca.pem"
     )
 
 # cnx = mysql.connector.connect(
@@ -34,6 +35,7 @@ def insert_order_item(food_item, quantity, order_id):
         cursor.execute("SHOW PROCEDURE STATUS WHERE Db='pandeyji_eatery';")
         for proc in cursor.fetchall():
             print(proc)
+        cursor.execute("USE pandeyji_eatery;")
         cursor.callproc('insert_order_item', (food_item, quantity, order_id))
         cnx.commit()
         cursor.close()
@@ -83,7 +85,6 @@ def get_next_order_id():
     if result is None:  # if it is empty
         return 1
     else:
-        print(result)
         return result + 1
 
 
@@ -106,11 +107,12 @@ def get_order_status(order_id):
         print(f"Error: {e}")
         return None
 
-#
-# if __name__ == "__main__":
-# get_order_status()
-# print(get_total_order_price(56))
-# insert_order_item('Samosa', 3, 99)
-# insert_order_item('Pav Bhaji', 1, 99)
-# insert_order_tracking(99, "in progress")
-# print(get_next_order_id())
+
+if __name__ == "__main__": # all methods are tested
+# insert_order_tracking(99, "in progress") # works well
+# print(get_next_order_id()) # Works well 100
+# insert_order_item('Samosa', 3, 99) # works well; Order item inserted successfully!
+# print(get_total_order_price(40)) # working well; 20.00
+# insert_order_item('Milk', 1, 99) # works well; Order item inserted successfully!
+# print(get_order_status(41)) # working well; 43-None, 40-in transit, 41-delivered
+
