@@ -1,2 +1,6 @@
+# This file keeps secrets and junk out of GitHub.
 .env
+certs/
+#sql/
+
 
