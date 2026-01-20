@@ -33,42 +33,49 @@ async def handle_request(request: Request):
 def new_order(parameters: dict, session_id: str):
     inprogress_orders.pop(session_id, None)
 
-
 def remove_from_order(parameters: dict, session_id: str):
     if session_id not in inprogress_orders:
         return JSONResponse(content={
-            "fulfillmentText": "I'm having a trouble finding your order. Sorry! Can you place a new order please?"
+            "fulfillmentText": "I'm having trouble finding your order. Please place a new order!"
         })
 
-    food_items = parameters["food-item"]
-    current_order = inprogress_orders[session_id]
+    food_items = parameters["food-item"]      # ['Milk', 'Cheese']
+    quantities = parameters["number"]         # [1, 2]
+    current_order = inprogress_orders[session_id]  # {'Milk': 1, 'Cheese': 2, 'Biscuits': 3}
 
     removed_items = []
+    reduced_items = []
     no_such_items = []
 
-    for item in food_items:
+    for i, item in enumerate(food_items): # 0--> ['Milk': 1], 1 --> ['Cheese': 2]
+        qty_to_remove = quantities[i]
         if item not in current_order:
             no_such_items.append(item)
         else:
-            removed_items.append(item)
-            del current_order[item]
+            if qty_to_remove >= current_order[item]: # user 3 > 1 or 2 or 3 current order
+                removed_items.append(item)
+                del current_order[item]
+            else:
+                current_order[item] -= qty_to_remove
+                reduced_items.append(f"{item} (-{qty_to_remove})")
 
-    # Check if items are removed and display them
-    if len(removed_items) > 0:
-        fulfillment_text = f'Removed {",".join(removed_items)} from your order!'
-    # Check if items are not ordered by the user and display the current order items.
-    if len(no_such_items) > 0:
-        fulfillment_text = f' Your current order does not have {",".join(no_such_items)}'
-    # Display order items weather its empty or have some items.
-    if len(current_order.keys()) == 0:
-        fulfillment_text += " Your order is empty!"
-    else:
+    # Prepare fulfillment text
+    fulfillment_text = ""
+    if removed_items:
+        fulfillment_text += f"Removed {', '.join(removed_items)} from your order. "
+    if reduced_items:
+        fulfillment_text += f"Updated quantities: {', '.join(reduced_items)}. "
+    if no_such_items:
+        fulfillment_text += f"You did not have {', '.join(no_such_items)} in your order. "
+
+    # Show remaining order
+    if current_order:
         order_str = generic_helper.get_str_from_food_dict(current_order)
-        fulfillment_text += f" Here is what is left in your order: {order_str}"
+        fulfillment_text += f"Here is what is left in your order: {order_str}"
+    else:
+        fulfillment_text += "Your order is now empty!"
 
-    return JSONResponse(content={
-        "fulfillmentText": fulfillment_text
-    })
+    return JSONResponse(content={"fulfillmentText": fulfillment_text})
 
 
 def complete_order(parameters: dict, session_id: str):
