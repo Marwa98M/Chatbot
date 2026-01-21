@@ -32,7 +32,8 @@ def add_to_order(parameters: dict, session_id: str):
         else:
             # if a user wants to add more food items to an empty order
             inprogress_orders[session_id] = new_food_dict
-        order_str = generic_helper.get_str_from_food_dict(inprogress_orders[session_id])
+        #order_str = generic_helper.get_str_from_food_dict(inprogress_orders[session_id])
+        order_str = inprogress_orders[session_id]
         fulfillment_text = f"{order_str}"
 
     return JSONResponse(content={
@@ -122,7 +123,6 @@ def complete_order(parameters, session_id):
                             f"Here is your order id  # {order_id}"
     })
 
-#
 # def complete_order(parameters: dict, session_id: str):
 #     print(inprogress_orders)
 #     if session_id not in inprogress_orders:
@@ -204,7 +204,7 @@ async def handle_webhook(request: Request, background_tasks: BackgroundTasks):
 
     intent_handler_dict = {
         "order.add - context: ongoing-order": add_to_order,
-        "track.order - context: ongoing-order": track_order,
+        "track.order - context: ongoing-tracking": track_order,
         "order.complete - context: ongoing-order": complete_order,
         "order.remove - context: ongoing-order": remove_from_order,
         "new.order": new_order
