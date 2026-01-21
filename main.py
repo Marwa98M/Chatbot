@@ -103,47 +103,89 @@ def remove_from_order(parameters: dict, session_id: str):
 
     return JSONResponse(content={"fulfillmentText": fulfillment_text})
 
-
-def complete_order(parameters: dict, session_id: str):
-    print(inprogress_orders)
+def complete_order(parameters, session_id):
+    # Check active order by session id
     if session_id not in inprogress_orders:
-        fulfillment_text = f"{session_id} I'm having a trouble finding your order. Sorry! Can you place a new order please?"
-    else:
-        order = inprogress_orders[session_id]
-        order_id = save_to_db(order)
-        if order_id == -1:
-            fulfillment_text = f"{order_id}Sorry, I couldn't process your order due to a backend error. " \
-                               "Please place a new order again"
-        else:
-            order_total = db_helper.get_total_order_price(order_id)
-            fulfillment_text = f"Awesome. We have placed your order. " \
-                           f"Here is your order id # {order_id}. " \
-                           f"Your order total is {order_total} which you can pay at the time of delivery!"
-        del inprogress_orders[session_id]
+        return JSONResponse(content={
+            "fulfillmentText": "You don’t have an active order."
+        })
+    # Check order-items is not empty
+    order = inprogress_orders[session_id]
+    if not order:
+        return JSONResponse(content={
+            "fulfillmentText": "Your order is empty."
+        })
+    # Active and not empty order
+    order_id = db_helper.get_next_order_id()
     return JSONResponse(content={
-        "fulfillmentText": fulfillment_text
+        "fulfillmentText": "Order confirmed! Placing it now ⏳" \
+                            f"Here is your order id  # {order_id}"
     })
 
+#
+# def complete_order(parameters: dict, session_id: str):
+#     print(inprogress_orders)
+#     if session_id not in inprogress_orders:
+#         fulfillment_text = f"{session_id} I'm having a trouble finding your order. Sorry! Can you place a new order please?"
+#     else:
+#         # order = inprogress_orders[session_id]
+#
+#         order_id = db_helper.get_next_order_id()
+#         fulfillment_text = f"Awesome. We have placed your order. " \
+#                             f"Here is your order id # {order_id}. "
+#         #order_id = save_to_db(order)
+#         # if order_id == -1:
+#         #     fulfillment_text = f"{order_id}Sorry, I couldn't process your order due to a backend error. " \
+#         #                        "Please place a new order again"
+#         # else:
+#         #     order_total = db_helper.get_total_order_price(order_id)
+#         #     fulfillment_text = f"Awesome. We have placed your order. " \
+#         #                    f"Here is your order id # {order_id}. " \
+#         #                    f"Your order total is {order_total} which you can pay at the time of delivery!"
+#         # del inprogress_orders[session_id]
+#     # return JSONResponse(content={
+#     #     "fulfillmentText": fulfillment_text
+#     # })
+#
+#     return JSONResponse(content={
+#         "fulfillmentText": fulfillment_text
+#     })
+#
 
-def save_to_db(order: dict):
-    # to add food-items
-    # step 1: if list is empty new order = 1
-    # step 2: if list is not empty new order = retrieve the max order id and add one
-    next_order_id = db_helper.get_next_order_id()
 
-    # Insert individual items along with quantity and total price in orders table
-    for food_item, quantity in order.items(): # e.g. ['milk': 1, 'banana':2]
-        rcode = db_helper.insert_order_item(food_item,quantity,next_order_id)
+def save_to_db(session_id):
+    order = inprogress_orders.get(session_id)
 
-        if rcode == -1:
-            return -1
+    if not order:
+        return
 
-    # Now insert order tracking status
-    db_helper.insert_order_tracking(next_order_id, "in progress")
+    order_id = db_helper.get_next_order_id()
 
-    return next_order_id
+    for item, qty in order.items():
+        db_helper.insert_order_item(item, qty, order_id)
+
+    db_helper.insert_order_tracking(order_id, "in progress")
+
+    del inprogress_orders[session_id]
 
 
+# def save_to_db(order: dict):
+#     # to add food-items
+#     # step 1: if list is empty new order = 1
+#     # step 2: if list is not empty new order = retrieve the max order id and add one
+#     next_order_id = db_helper.get_next_order_id()
+#
+#     # Insert individual items along with quantity and total price in orders table
+#     for food_item, quantity in order.items(): # e.g. ['milk': 1, 'banana':2]
+#         rcode = db_helper.insert_order_item(food_item,quantity,next_order_id)
+#
+#         if rcode == -1:
+#             return -1
+#
+#     # Now insert order tracking status
+#     db_helper.insert_order_tracking(next_order_id, "in progress")
+#
+#     return next_order_id
 
 
 @app.get("/")
@@ -153,7 +195,7 @@ async def root():
 
 # FastAPI route for Dialogflow
 @app.post("/")
-async def handle_webhook(request: Request):
+async def handle_webhook(request: Request, background_tasks: BackgroundTasks):
     payload = await request.json()
     intent = payload['queryResult']['intent']['displayName']
     parameters = payload['queryResult']['parameters']
@@ -161,7 +203,7 @@ async def handle_webhook(request: Request):
     session_id = generic_helper.extract_session_id(output_context[0]['name'])
 
     intent_handler_dict = {
-        "order.add -context: ongoing-order": add_to_order,
+        "order.add - context: ongoing-order": add_to_order,
         "track.order - context: ongoing-order": track_order,
         "order.complete - context: ongoing-order": complete_order,
         "order.remove - context: ongoing-order": remove_from_order,
@@ -169,9 +211,14 @@ async def handle_webhook(request: Request):
     }
 
     if intent in intent_handler_dict:
+        if intent == "order.complete - context: ongoing-order":
+            background_tasks.add_task(save_to_db, session_id)
+
         return intent_handler_dict[intent](parameters, session_id)
-    else:
-        return JSONResponse(content={"fulfillmentText": "Sorry, I didn't understand that."})
+
+    return JSONResponse(content={
+        "fulfillmentText": "Sorry, I didn't understand that."
+    })
 
 
 
