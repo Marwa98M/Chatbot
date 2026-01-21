@@ -144,13 +144,6 @@ def save_to_db(order: dict):
     return next_order_id
 
 
-intent_handler_dict = {
-        "order.add -context: ongoing-order": add_to_order,
-        "track.order - context: ongoing-order": track_order,
-        "order.complete - context: ongoing-order": complete_order,
-        "order.remove - context: ongoing-order": remove_from_order,
-        "new.order": new_order
-    }
 
 
 @app.get("/")
@@ -158,32 +151,27 @@ async def root():
     return {"message": "Hello World"}
 
 
-# This is your background task
-def handle_request(parameters: dict, session_id: str):
-    intent = parameters.get('intent')
-    handler = intent_handler_dict.get(intent)
-    if handler:
-        result = handler(parameters, session_id)
-        # optionally log or store result
-        print(f"Processed intent {intent} for session {session_id}: {result}")
-
-
 # FastAPI route for Dialogflow
 @app.post("/")
-async def handle_webhook(request: Request, background_tasks: BackgroundTasks):
+async def handle_webhook(request: Request):
     payload = await request.json()
+    intent = payload['queryResult']['intent']['displayName']
     parameters = payload['queryResult']['parameters']
     output_context = payload['queryResult']['outputContexts']
     session_id = generic_helper.extract_session_id(output_context[0]['name'])
 
-    intent = payload['queryResult']['intent']['displayName']
-    parameters['intent'] = intent  # include intent so handle_request can use it
+    intent_handler_dict = {
+        "order.add -context: ongoing-order": add_to_order,
+        "track.order - context: ongoing-order": track_order,
+        "order.complete - context: ongoing-order": complete_order,
+        "order.remove - context: ongoing-order": remove_from_order,
+        "new.order": new_order
+    }
 
-    # Run in background to avoid Dialogflow timeout
-    background_tasks.add_task(handle_request, parameters, session_id)
-
-    # Respond immediately to Dialogflow
-    return JSONResponse(content={"fulfillmentText": "Processing your request..."})
+    if intent in intent_handler_dict:
+        return intent_handler_dict[intent](parameters, session_id)
+    else:
+        return JSONResponse(content={"fulfillmentText": "Sorry, I didn't understand that."})
 
 
 
