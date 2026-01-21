@@ -16,15 +16,6 @@ def get_db():
         ssl_ca="./certs/ca.pem"
     )
 
-# cnx = mysql.connector.connect(
-#     host=os.getenv("DB_HOST"),
-#     port=int(os.getenv("DB_PORT")),
-#     user=os.getenv("DB_USER"),
-#     password=os.getenv("DB_PASSWORD"),
-#     database=os.getenv("DB_NAME"),
-#     ssl_ca=None
-# )
-
 
 # Function to call the MySQL stored procedure and insert an order item
 def insert_order_item(food_item, quantity, order_id):

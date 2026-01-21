@@ -11,11 +11,7 @@ def new_order(parameters: dict, session_id: str):
     inprogress_orders.pop(session_id, None)
 
 
-
-
-
-
-def add_to_order(parameters: dict, session_id: str):
+def add_to_order(parameters: dict, session_id: str, order_id: int):
     food_items = parameters["food-item"]
     quantities = parameters["number"]
     # user typed sth like i want 2 pizza and milk
@@ -45,38 +41,14 @@ def add_to_order(parameters: dict, session_id: str):
     })
 
 
-
-
-def add_to_order(parameters: dict, session_id: str):
-    food_items = parameters["food-item"]
-    quantities = parameters["number"]
-
-    if len(food_items) != len(quantities):
-        fulfillment_text = "Sorry I didn't understand. Can you please specify food items and quantities clearly?"
-    else:
-        new_food_dict = dict(zip(food_items, quantities))
-
-        if session_id in inprogress_orders:
-            current_food_dict = inprogress_orders[session_id]
-            current_food_dict.update(new_food_dict)
-            inprogress_orders[session_id] = current_food_dict
-        else:
-            inprogress_orders[session_id] = new_food_dict
-
-        order_str = generic_helper.get_str_from_food_dict(inprogress_orders[session_id])
-        fulfillment_text = f"So far you have: {order_str}. Do you need anything else?"
-
-    return JSONResponse(content={
-        "fulfillmentText": fulfillment_text
-    })
-
-
-def track_order(parameters: dict, session_id: str):
+def track_order(parameters: dict, session_id: str, order_id: int):
     if 'order_id' not in parameters:
         return JSONResponse(content={
             "fulfillmentText": "Please provide an order ID."
         })
     order_id = int(parameters['order_id'])
+    # check if this order belong to his session_id
+    if order_id
     order_status = db_helper.get_order_status(order_id)
 
     if order_status:
@@ -153,36 +125,6 @@ def complete_order(parameters, session_id):
                             f"Here is your order id  # {order_id}"
     })
 
-# def complete_order(parameters: dict, session_id: str):
-#     print(inprogress_orders)
-#     if session_id not in inprogress_orders:
-#         fulfillment_text = f"{session_id} I'm having a trouble finding your order. Sorry! Can you place a new order please?"
-#     else:
-#         # order = inprogress_orders[session_id]
-#
-#         order_id = db_helper.get_next_order_id()
-#         fulfillment_text = f"Awesome. We have placed your order. " \
-#                             f"Here is your order id # {order_id}. "
-#         #order_id = save_to_db(order)
-#         # if order_id == -1:
-#         #     fulfillment_text = f"{order_id}Sorry, I couldn't process your order due to a backend error. " \
-#         #                        "Please place a new order again"
-#         # else:
-#         #     order_total = db_helper.get_total_order_price(order_id)
-#         #     fulfillment_text = f"Awesome. We have placed your order. " \
-#         #                    f"Here is your order id # {order_id}. " \
-#         #                    f"Your order total is {order_total} which you can pay at the time of delivery!"
-#         # del inprogress_orders[session_id]
-#     # return JSONResponse(content={
-#     #     "fulfillmentText": fulfillment_text
-#     # })
-#
-#     return JSONResponse(content={
-#         "fulfillmentText": fulfillment_text
-#     })
-#
-
-
 def save_to_db(session_id):
     order = inprogress_orders.get(session_id)
 
@@ -199,25 +141,6 @@ def save_to_db(session_id):
     del inprogress_orders[session_id]
 
 
-# def save_to_db(order: dict):
-#     # to add food-items
-#     # step 1: if list is empty new order = 1
-#     # step 2: if list is not empty new order = retrieve the max order id and add one
-#     next_order_id = db_helper.get_next_order_id()
-#
-#     # Insert individual items along with quantity and total price in orders table
-#     for food_item, quantity in order.items(): # e.g. ['milk': 1, 'banana':2]
-#         rcode = db_helper.insert_order_item(food_item,quantity,next_order_id)
-#
-#         if rcode == -1:
-#             return -1
-#
-#     # Now insert order tracking status
-#     db_helper.insert_order_tracking(next_order_id, "in progress")
-#
-#     return next_order_id
-
-
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -232,6 +155,7 @@ async def handle_webhook(request: Request, background_tasks: BackgroundTasks):
     output_context = payload['queryResult']['outputContexts']
     session_id = generic_helper.extract_session_id(output_context[0]['name'])
 
+
     intent_handler_dict = {
         "order.add - context: ongoing-order": add_to_order,
         "track.order - context: ongoing-tracking": track_order,
@@ -239,6 +163,7 @@ async def handle_webhook(request: Request, background_tasks: BackgroundTasks):
         "order.remove - context: ongoing-order": remove_from_order,
         "new.order": new_order
     }
+
 
     if intent in intent_handler_dict:
         if intent == "order.complete - context: ongoing-order":
