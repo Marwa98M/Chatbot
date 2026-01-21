@@ -11,8 +11,11 @@ def new_order(parameters: dict, session_id: str):
     inprogress_orders.pop(session_id, None)
 
 
-def add_to_order(parameters: dict, session_id: str):
 
+
+
+
+def add_to_order(parameters: dict, session_id: str):
     food_items = parameters["food-item"]
     quantities = parameters["number"]
     # user typed sth like i want 2 pizza and milk
@@ -23,18 +26,45 @@ def add_to_order(parameters: dict, session_id: str):
         # new_food_dict --> what user wants to add
         # [2, 3], ["apple", "tomatoes"] --> {apple: 2, tomatoes: 3}
         new_food_dict = dict(zip(food_items, quantities))
-
         # if a user wants to add more food items to the existing order
         # step 1: get current food items of the session id
         # step 2: add the new food items to the inprogress_orders dict
         if session_id in inprogress_orders:
-            inprogress_orders[session_id].update(new_food_dict)
-        else:
-            # if a user wants to add more food items to an empty order
+            current_food_dict = inprogress_orders[session_id]
+            current_food_dict.update(new_food_dict)
+            inprogress_orders[session_id] = current_food_dict
+        else: # # if a user wants to add more food items to an empty order
             inprogress_orders[session_id] = new_food_dict
-        #order_str = generic_helper.get_str_from_food_dict(inprogress_orders[session_id])
+
+        # order_str = generic_helper.get_str_from_food_dict(inprogress_orders[session_id])
         order_str = inprogress_orders[session_id]
-        fulfillment_text = f"{order_str}"
+        fulfillment_text = f"So far you have: {order_str}. Do you need anything else?"
+
+    return JSONResponse(content={
+            "fulfillmentText": fulfillment_text
+    })
+
+
+
+
+def add_to_order(parameters: dict, session_id: str):
+    food_items = parameters["food-item"]
+    quantities = parameters["number"]
+
+    if len(food_items) != len(quantities):
+        fulfillment_text = "Sorry I didn't understand. Can you please specify food items and quantities clearly?"
+    else:
+        new_food_dict = dict(zip(food_items, quantities))
+
+        if session_id in inprogress_orders:
+            current_food_dict = inprogress_orders[session_id]
+            current_food_dict.update(new_food_dict)
+            inprogress_orders[session_id] = current_food_dict
+        else:
+            inprogress_orders[session_id] = new_food_dict
+
+        order_str = generic_helper.get_str_from_food_dict(inprogress_orders[session_id])
+        fulfillment_text = f"So far you have: {order_str}. Do you need anything else?"
 
     return JSONResponse(content={
         "fulfillmentText": fulfillment_text

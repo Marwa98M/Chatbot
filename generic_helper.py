@@ -8,6 +8,7 @@ def extract_session_id(session_str: str):
         return extracted_string
     return ""
 #
+
 # def get_str_from_food_dict(food_dict):
 #     print(food_dict.values())
 #
