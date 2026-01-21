@@ -9,19 +9,20 @@ def extract_session_id(session_str: str):
     return ""
 
 def get_str_from_food_dict(food_dict):
-    fulfillment_text = f"So far you have:"
-    i = 1
-    for key, value in food_dict.items():
-        fulfillment_text += f"{int(value)} {key}"
-        if i < len(food_dict):
-            fulfillment_text += ', and '
-        i = i+1
-    fulfillment_text = f". Do you need anything else? "
-    return fulfillment_text
+    print(food_dict.values())
+
+
+
+    return ', '.join(food_dict).join(food_dict.values())
+
 
 #
-# if __name__ == "__main__":
-#     print(extract_session_id("projects/mira-chatbot-for-food-del-iwup/agent/sessions/362e60d4-0f2d-37cc-8fb9-9535fb8169d9/contexts/ongoing-order")
-# )
+if __name__ == "__main__":
+    dict = {'Milk': 1, 'Cheese': 2, 'Biscuits': 3}
+    print(get_str_from_food_dict(dict))
+
+    #print(extract_session_id("projects/mira-chatbot-for-food-del-iwup/agent/sessions/362e60d4-0f2d-37cc-8fb9-9535fb8169d9/contexts/ongoing-order")
+
+
 
 
