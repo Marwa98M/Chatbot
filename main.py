@@ -48,7 +48,6 @@ def track_order(parameters: dict, session_id: str, order_id: int):
         })
     order_id = int(parameters['order_id'])
     # check if this order belong to his session_id
-    if order_id
     order_status = db_helper.get_order_status(order_id)
 
     if order_status:
